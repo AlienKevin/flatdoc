@@ -2,20 +2,42 @@
   var $window = $(window);
   var $document = $(document);
 
- /*
-  * Scrollspy.
-  */
+ // Scroll to menu anchor
+ const menubar = document.querySelector(".menubar");
+ menubar.addEventListener("click", (e) => {
+     if (e.target.tagName === "A") {
+         // all menu anchors in menubar in position sequence (top to bottom)
+         const anchors = Array.from(menubar.querySelectorAll("a"));
+         const clickedAnchor = e.target;
+         let activeAnchor = document.querySelector(".menubar a.active")
+         if (clickedAnchor !== activeAnchor) { // clicked on a different anchor
+             if (activeAnchor) {
+                 let wait = 100; // initial wait period 100 ms
+                 moveActiveAnchor(wait);
 
- $document.on('flatdoc:ready', function() {
-    $("h2, h3").scrollagent(function(cid, pid, currentElement, previousElement) {
-      if (pid) {
-       $("[href='#"+pid+"']").removeClass('active');
-      }
-      if (cid) {
-       $("[href='#"+cid+"']").addClass('active');
-      }
-    });
-  });
+                 function moveActiveAnchor() {
+                     activeAnchor.classList.remove("active");
+                     if (activeAnchor.getBoundingClientRect().top < clickedAnchor.getBoundingClientRect().top) {
+                         // clicked anchor is **below** the current active anchor
+                         activeAnchor = anchors[anchors.indexOf(activeAnchor) + 1];
+                     } else {
+                         // clicked anchor is **above** the current active anchor
+                         activeAnchor = anchors[anchors.indexOf(activeAnchor) - 1];
+                     }
+                     activeAnchor.classList.add("active");
+                     if (activeAnchor !== clickedAnchor) {
+                         if (wait > 0) {
+                             wait -= 16; // decrease 16ms for wait period every time
+                         }
+                         setTimeout(moveActiveAnchor, wait);
+                     }
+                 }
+             } else { // first active anchor
+                 clickedAnchor.classList.add("active");
+             }
+         }
+     }
+ })
 
  /*
   * Anchor jump links.
@@ -72,94 +94,7 @@
   });
 
 })(jQuery);
-/*! jQuery.scrollagent (c) 2012, Rico Sta. Cruz. MIT License.
- *  https://github.com/rstacruz/jquery-stuff/tree/master/scrollagent */
 
-// Call $(...).scrollagent() with a callback function.
-//
-// The callback will be called everytime the focus changes.
-//
-// Example:
-//
-//      $("h2").scrollagent(function(cid, pid, currentElement, previousElement) {
-//        if (pid) {
-//          $("[href='#"+pid+"']").removeClass('active');
-//        }
-//        if (cid) {
-//          $("[href='#"+cid+"']").addClass('active');
-//        }
-//      });
-
-(function($) {
-
-  $.fn.scrollagent = function(options, callback) {
-    // Account for $.scrollspy(function)
-    if (typeof callback === 'undefined') {
-      callback = options;
-      options = {};
-    }
-
-    var $sections = $(this);
-    var $parent = options.parent || $(window);
-
-    // Find the top offsets of each section
-    var offsets = [];
-    $sections.each(function(i) {
-      var offset = $(this).attr('data-anchor-offset') ?
-        parseInt($(this).attr('data-anchor-offset'), 10) :
-        (options.offset || 0);
-
-      offsets.push({
-        id: $(this).attr('id'),
-        index: i,
-        el: this,
-        offset: offset
-      });
-    });
-
-    // State
-    var current = null;
-    var height = null;
-    var range = null;
-
-    // Save the height. Do this only whenever the window is resized so we don't
-    // recalculate often.
-    $(window).on('resize', function() {
-      height = $parent.height();
-      range = $(document).height();
-    });
-
-    // Find the current active section every scroll tick.
-    $parent.on('scroll', function() {
-      var y = $parent.scrollTop();
-      y += height * (0.3 + 0.7 * Math.pow(y/range, 2));
-
-      var latest = null;
-
-      for (var i in offsets) {
-        if (offsets.hasOwnProperty(i)) {
-          var offset = offsets[i];
-          if ($(offset.el).offset().top + offset.offset < y) latest = offset;
-        }
-      }
-
-      if (latest && (!current || (latest.index !== current.index))) {
-        callback.call($sections,
-          latest ? latest.id : null,
-          current ? current.id : null,
-          latest ? latest.el : null,
-          current ? current.el : null);
-        current = latest;
-      }
-    });
-
-    $(window).trigger('resize');
-    $parent.trigger('scroll');
-
-    return this;
-  };
-
-})(jQuery);
 /*! Anchorjump (c) 2012, Rico Sta. Cruz. MIT License.
  *   http://github.com/rstacruz/jquery-stuff/tree/master/anchorjump */
 
